@@ -169,3 +169,20 @@ start.bat
 ## 📜 License
 
 This project is developed as a B.E. Final Year Project for academic purposes.
+
+## 📸 Project Screenshots
+
+### Login Page
+![Login Page](ScreenShots/login%20Page.png)
+
+### Digital Wellness Dashboard
+![Dashboard](ScreenShots/Digital%20wellness%20Dashboard.png)
+
+### Analytics & ML Engine
+![Analytics](ScreenShots/Analytics%20%26%20ML%20Engin.png)
+
+### BSMAS Assessment
+![BSMAS Assessment](ScreenShots/BSMAS%20Assessment.png)
+
+### Smart Interventions
+![Smart Interventions](ScreenShots/Smart%20Interventions.png)
