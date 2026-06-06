@@ -186,3 +186,18 @@ This project is developed as a B.E. Final Year Project for academic purposes.
 
 ### Smart Interventions
 ![Smart Interventions](ScreenShots/Smart%20Interventions.png)
+
+
+## 👥 Team Members
+
+- Dhiraj Bhamburkar
+- Gaurav Mehere
+- Rahul Pawar
+
+### Contributions
+
+- Dhiraj Bhamburkar – Frontend Development / GitHub Management
+- Gaurav Mehere – Machine Learning Module / Backend Integration
+- Rahul Pawar – Database Design & Testing
+
+  
