@@ -1,0 +1,166 @@
+# 📐 System Architecture — SMADS
+
+## High-Level Architecture Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           USER INTERACTION LAYER                            │
+│                                                                             │
+│   📱 Browser / Mobile         🔔 Push Notifications        📊 Reports      │
+│        │                            │                          │            │
+│        └────────────────────────────┴──────────────────────────┘            │
+│                                     │                                       │
+│                            HTTPS (REST API)                                 │
+│                            JWT Authentication                               │
+└─────────────────────────────┬───────────────────────────────────────────────┘
+                              │
+┌─────────────────────────────┼───────────────────────────────────────────────┐
+│                    FRONTEND (React.js + Tailwind CSS)                       │
+│                                                                             │
+│   ┌────────────────┐   ┌──────────────┐   ┌──────────────┐                 │
+│   │  Auth Pages     │   │  Dashboard   │   │  BSMAS       │                 │
+│   │  (Login/Reg)   │   │  (Recharts)  │   │  Assessment  │                 │
+│   └────────────────┘   └──────────────┘   └──────────────┘                 │
+│   ┌────────────────┐   ┌──────────────┐   ┌──────────────┐                 │
+│   │  Analytics &   │   │  Alert       │   │  Intervention│                 │
+│   │  ML Results    │   │  Center      │   │  & Focus Mode│                 │
+│   └────────────────┘   └──────────────┘   └──────────────┘                 │
+│                                                                             │
+│   State Management: React Context API                                      │
+│   API Client: Axios (with JWT interceptors)                                │
+│   Routing: React Router v7                                                  │
+└─────────────────────────────┬───────────────────────────────────────────────┘
+                              │
+                    API Layer (REST)
+                    /api/auth, /api/usage,
+                    /api/analytics, /api/alerts,
+                    /api/interventions
+                              │
+┌─────────────────────────────┼───────────────────────────────────────────────┐
+│                    BACKEND (Python FastAPI)                                  │
+│                                                                             │
+│   ┌─── ROUTES ──────────────────────────────────────────────────────────┐   │
+│   │  auth.py   │  usage.py  │  analytics.py  │  alerts.py  │ interv.py│   │
+│   └───┬────────┴─────┬──────┴──────┬─────────┴─────┬───────┴────┬─────┘   │
+│       │              │             │               │            │          │
+│   ┌───┴── SERVICES ──┴─────────────┴───────────────┴────────────┴─────┐   │
+│   │                                                                    │   │
+│   │  ┌──────────────┐  ┌────────────────┐  ┌──────────────────────┐   │   │
+│   │  │ auth_service  │  │ usage_service  │  │ addiction_index.py   │   │   │
+│   │  │ JWT + Bcrypt  │  │ Ingest & Agg.  │  │ Weighted Composite   │   │   │
+│   │  └──────────────┘  └────────────────┘  │ Sigmoid Scoring      │   │   │
+│   │                                         └──────────────────────┘   │   │
+│   │  ┌──────────────┐  ┌────────────────┐  ┌──────────────────────┐   │   │
+│   │  │ ml_engine.py │  │ alert_service  │  │ intervention_service │   │   │
+│   │  │ RF / GBM     │  │ Threshold      │  │ Focus Mode + Detox   │   │   │
+│   │  │ Classifier   │  │ Monitoring     │  │ Activity Suggestions │   │   │
+│   │  └──────┬───────┘  └────────────────┘  └──────────────────────┘   │   │
+│   │         │                                                          │   │
+│   │  ┌──────┴───────────────────────────────────────────────────────┐  │   │
+│   │  │  Feature Engineering Pipeline                                │  │   │
+│   │  │  Raw Logs → 20 Features → Scaler → ML Model → Prediction    │  │   │
+│   │  └─────────────────────────────────────────────────────────────┘  │   │
+│   └────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│   MIDDLEWARE: CORS, JWT Validation, Error Handling                          │
+└─────────────────────────────┬───────────────────────────────────────────────┘
+                              │
+                    Motor (Async MongoDB Driver)
+                              │
+┌─────────────────────────────┼───────────────────────────────────────────────┐
+│                    DATABASE (MongoDB 7+)                                    │
+│                                                                             │
+│   ┌──────────────────┐  ┌──────────────────┐  ┌─────────────────────┐      │
+│   │  user_profiles   │  │  usage_logs      │  │  addiction_alerts   │      │
+│   │  (Standard)      │  │  (TIME-SERIES)   │  │  (Standard)         │      │
+│   │                  │  │                  │  │                     │      │
+│   │  • username      │  │  • timestamp ⏰  │  │  • alert_type       │      │
+│   │  • email         │  │  • user_id       │  │  • severity         │      │
+│   │  • password_hash │  │  • platform      │  │  • title            │      │
+│   │  • risk_level    │  │  • session_dur   │  │  • message          │      │
+│   │  • addiction_idx │  │  • app_switches  │  │  • is_read          │      │
+│   │  • preferences   │  │  • scroll_depth  │  │  • created_at       │      │
+│   └──────────────────┘  │  • interactions  │  └─────────────────────┘      │
+│                          └──────────────────┘                               │
+│   ┌──────────────────┐  ┌──────────────────┐                               │
+│   │  bsmas_scores    │  │  interventions   │                               │
+│   │  (Standard)      │  │  (Standard)      │                               │
+│   │                  │  │                  │                               │
+│   │  • responses {}  │  │  • type          │                               │
+│   │  • total_score   │  │  • duration      │                               │
+│   │  • percentage    │  │  • completed     │                               │
+│   │  • classification│  │  • triggered_at  │                               │
+│   └──────────────────┘  └──────────────────┘                               │
+│                                                                             │
+│   INDEXES: email (unique), user_id+timestamp (compound), alert lookups     │
+│   TIME-SERIES: usage_logs with minutes granularity, 1-year retention       │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+## Data Flow
+
+```
+1. User opens app on phone
+   │
+2. Usage tracker captures:
+   │  • Screen time per session
+   │  • App switching frequency
+   │  • Scroll depth percentage
+   │  • Interaction counts (likes, comments, shares)
+   │  • Session timestamps
+   │
+3. Data sent to FastAPI via POST /api/usage/log
+   │           │
+   │     ┌─────┴─────┐
+   │     │ JWT Auth   │ ← Validates Bearer token
+   │     └─────┬─────┘
+   │           │
+4. Usage Service processes & stores in MongoDB (time-series)
+   │           │
+   │     ┌─────┴──────────────────────────┐
+   │     │  Alert Service evaluates:       │
+   │     │  • Continuous usage > 3 hours? │
+   │     │  • Daily limit exceeded?       │
+   │     │  • Late night (12AM-5AM)?      │
+   │     └─────┬──────────────────────────┘
+   │           │
+5. Addiction Index calculated (weighted composite)
+   │           │
+   │     ┌─────┴──────────────────────────────┐
+   │     │  Factor scores computed:             │
+   │     │  Duration(30%) + Frequency(20%)      │
+   │     │  + Continuity(15%) + App-Switch(15%) │
+   │     │  + Temporal(10%) + Engagement(10%)   │
+   │     └─────┬──────────────────────────────┘
+   │           │
+6. ML Engine predicts risk classification
+   │     │  Features engineered from raw logs
+   │     │  Random Forest / Gradient Boosting
+   │     │  Output: Normal / At-Risk / Addicted
+   │     │  + Confidence scores
+   │           │
+7. Results displayed on React Dashboard
+   │  • Real-time KPI cards
+   │  • Weekly trend charts
+   │  • Dopamine radar chart
+   │  • Usage heatmap
+   │  • Recovery progress ring
+   │  • Alert notifications
+   │
+8. Smart Interventions triggered
+      • Focus Mode activation
+      • Digital Detox suggestions
+      • Personalized recommendations
+```
+
+## Technology Justification
+
+| Technology | Why Chosen |
+|---|---|
+| **FastAPI** | Async Python framework — ideal for concurrent ML inference + DB operations |
+| **MongoDB Time-Series** | Optimized for high-frequency telemetry data (usage logs every few minutes) |
+| **Motor** | Async MongoDB driver that pairs perfectly with FastAPI's async architecture |
+| **Random Forest** | Robust ensemble classifier, handles mixed feature types, interpretable |
+| **JWT + Bcrypt** | Stateless authentication, no server-side sessions, secure password hashing |
+| **React + Recharts** | Component-based UI with rich, interactive data visualizations |
+| **Tailwind CSS** | Utility-first CSS for rapid, consistent, and responsive styling |

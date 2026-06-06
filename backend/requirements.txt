@@ -1,0 +1,28 @@
+# FastAPI & Server
+fastapi==0.131.0
+uvicorn[standard]==0.41.0
+python-multipart==0.0.9
+
+# Database
+motor==3.7.1
+pymongo==4.16.0
+
+# Authentication
+python-jose[cryptography]==3.5.0
+passlib[bcrypt]==1.7.4
+bcrypt==3.2.2
+
+# ML & Data Science
+scikit-learn==1.8.0
+pandas==3.0.1
+numpy==2.4.2
+joblib==1.5.3
+
+# Validation & Utils
+pydantic==2.12.5
+pydantic-settings==2.13.1
+python-dotenv==1.2.1
+email-validator==2.1.0.post1
+
+# CORS
+starlette==0.52.1
